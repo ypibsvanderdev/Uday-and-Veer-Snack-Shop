@@ -168,6 +168,7 @@
             <button type="button" class="qty-btn" id="qtyPlus">+</button>
           </div>
         </div>
+                <!-- Meetup Spot -->
         <div class="form-group">
           <label>Meetup Spot <span>*</span></label>
           <div class="location-grid">
@@ -180,6 +181,23 @@
             <div class="location-option"><input type="radio" name="meetup" id="loc7" value="7th Grade Entrance" /><label for="loc7">🏫 7th Grade Entrance</label></div>
             <div class="location-option"><input type="radio" name="meetup" id="loc8" value="6th Grade Entrance" /><label for="loc8">🏫 6th Grade Entrance</label></div>
           </div>
+        </div>
+
+        <!-- Dropoff Time -->
+        <div class="form-group">
+          <label>Dropoff Time <span>*</span></label>
+          <select id="dropoffTime" required>
+            <option value="" disabled selected>Choose a dropoff time...</option>
+            <option value="Before School">🌅 Before School (Morning)</option>
+            <option value="Between Period 1 & 2">⚡ Passing Period (1 ➔ 2)</option>
+            <option value="Between Period 2 & 3">⚡ Passing Period (2 ➔ 3)</option>
+            <option value="Between Period 3 & 4">⚡ Passing Period (3 ➔ 4)</option>
+            <option value="During Lunch">🥪 During Lunch</option>
+            <option value="Between Period 5 & 6">⚡ Passing Period (5 ➔ 6)</option>
+            <option value="Between Period 6 & 7">⚡ Passing Period (6 ➔ 7)</option>
+            <option value="After School">🏫 After School</option>
+            <option value="Flexible / See Message">💬 Other (See message)</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Message to Uday &amp; Veer <span style="color:var(--muted);font-weight:600;">(optional)</span></label>
@@ -329,9 +347,11 @@
     e.preventDefault();
     const name = document.getElementById("customerName").value.trim();
     const meetup = document.querySelector("input[name='meetup']:checked")?.value;
+    const dropoff = document.getElementById("dropoffTime").value;
     const message = document.getElementById("customerMessage").value.trim();
     if (!name) { showToast("Please enter your name"); return; }
     if (!meetup) { showToast("Please choose a meetup spot"); return; }
+    if (!dropoff) { showToast("Please choose a dropoff time"); return; }
     const btn = document.getElementById("submitBtn");
     btn.disabled = true; btn.textContent = "Placing order...";
     try {
@@ -343,6 +363,7 @@
         quantity,
         total: selectedProduct.price * quantity,
         meetupLocation: meetup,
+        dropoffTime: dropoff,
         message,
         status: "pending",
         createdAt: serverTimestamp()
@@ -391,5 +412,6 @@
 </script>
 </body>
 </html>
+
 
 
