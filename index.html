@@ -365,9 +365,31 @@
     setTimeout(() => t.classList.remove("show"), 3000);
   }
 
-  await seedProducts();
-  listenToProducts();
+  // Load products with error handling
+  try {
+    await seedProducts();
+  } catch(err) {
+    console.warn("Seed products failed:", err);
+  }
+  try {
+    listenToProducts();
+  } catch(err) {
+    console.error("Failed to listen to products:", err);
+    // Show fallback static products
+    products = DEFAULT_PRODUCTS.map(p => ({...p}));
+    renderProducts(products);
+    document.getElementById("loadingOverlay").classList.remove("active");
+  }
+  // Safety fallback - remove loading overlay after 5 seconds no matter what
+  setTimeout(() => {
+    document.getElementById("loadingOverlay").classList.remove("active");
+    if (products.length === 0) {
+      products = DEFAULT_PRODUCTS.map(p => ({...p}));
+      renderProducts(products);
+    }
+  }, 5000);
 </script>
 </body>
 </html>
+
 
