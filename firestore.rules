@@ -1,0 +1,21 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can create an order (customers placing orders)
+    match /orders/{orderId} {
+      allow create: if request.resource.data.keys().hasAll(["customerName","productId","productName","quantity","total","meetupLocation","status","createdAt"])
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.customerName is string
+                    && request.resource.data.customerName.size() > 0;
+      // Only authenticated users can read/update orders
+      allow read, update: if request.auth != null;
+    }
+
+    // Products are publicly readable; only authenticated users can update stock
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

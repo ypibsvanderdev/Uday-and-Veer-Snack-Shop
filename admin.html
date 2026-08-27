@@ -1,0 +1,428 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin Dashboard – Uday & Veer Snack Shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--primary:#ff4d6d;--primary-dark:#c9184a;--accent:#06d6a0;--purple:#7b2d8b;--bg:#f0f4ff;--card:#fff;--text:#2d2d2d;--muted:#888;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:"Nunito",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    /* Login page */
+    .login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+    .login-card{background:var(--card);border-radius:28px;padding:48px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.12);max-width:420px;width:100%;}
+    .login-card .logo{font-size:3.5rem;margin-bottom:12px;}
+    .login-card h1{font-family:"Fredoka One",cursive;font-size:1.8rem;color:var(--primary);margin-bottom:6px;}
+    .login-card p{color:var(--muted);margin-bottom:32px;font-size:.95rem;}
+    .google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 20px;background:white;border:2px solid #e0e0e0;border-radius:50px;font-family:"Nunito",sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+    .google-btn:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(255,77,109,0.2);}
+    .google-btn svg{width:22px;height:22px;}
+    .access-denied{color:#dc3545;background:#fff5f5;border-radius:12px;padding:16px;margin-top:20px;font-weight:700;display:none;}
+
+    /* Dashboard layout */
+    .dashboard{display:none;}
+    .sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:28px 20px;overflow-y:auto;z-index:100;}
+    .sidebar-logo{text-align:center;margin-bottom:32px;}
+    .sidebar-logo span{font-size:2.5rem;display:block;margin-bottom:8px;}
+    .sidebar-logo h2{font-family:"Fredoka One",cursive;color:white;font-size:1.2rem;line-height:1.3;}
+    .sidebar-logo p{color:rgba(255,255,255,0.5);font-size:.8rem;margin-top:4px;}
+    nav a{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,0.7);text-decoration:none;font-weight:700;margin-bottom:6px;transition:all .2s;font-size:.95rem;}
+    nav a:hover,nav a.active{background:rgba(255,77,109,0.2);color:white;}
+    nav a .nav-icon{font-size:1.2rem;width:24px;text-align:center;}
+    .nav-badge{margin-left:auto;background:var(--primary);color:white;border-radius:20px;padding:2px 10px;font-size:.75rem;font-weight:800;}
+    .signout-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;font-family:"Nunito",sans-serif;font-weight:700;font-size:.95rem;width:100%;margin-top:20px;transition:all .2s;}
+    .signout-btn:hover{background:rgba(255,255,255,0.08);color:white;}
+    .content{margin-left:260px;padding:32px;min-height:100vh;}
+    .page-header{margin-bottom:28px;}
+    .page-header h1{font-family:"Fredoka One",cursive;font-size:2rem;color:var(--text);}
+    .page-header p{color:var(--muted);margin-top:4px;}
+
+    /* Stats row */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:28px;}
+    .stat-card{background:var(--card);border-radius:var(--radius);padding:20px;text-align:center;box-shadow:var(--shadow);}
+    .stat-card .stat-num{font-family:"Fredoka One",cursive;font-size:2.2rem;}
+    .stat-card .stat-label{font-size:.8rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:4px;}
+    .stat-pending .stat-num{color:#f59e0b;}
+    .stat-approved .stat-num{color:var(--accent);}
+    .stat-rejected .stat-num{color:var(--primary);}
+    .stat-revenue .stat-num{color:var(--purple);}
+
+    /* Section tabs */
+    .tab-panel{display:none;}
+    .tab-panel.active{display:block;}
+
+    /* Order cards */
+    .orders-list{display:flex;flex-direction:column;gap:16px;}
+    .order-card{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);border-left:5px solid #e0e0e0;transition:border-color .2s;}
+    .order-card.pending{border-left-color:#f59e0b;}
+    .order-card.approved{border-left-color:var(--accent);}
+    .order-card.rejected{border-left-color:var(--primary);}
+    .order-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .order-info h3{font-family:"Fredoka One",cursive;font-size:1.2rem;color:var(--text);}
+    .order-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+    .meta-pill{background:#f0f0f0;padding:3px 10px;border-radius:20px;font-size:.8rem;font-weight:700;color:#555;}
+    .meta-pill.meetup{background:#ede9fe;color:#7c3aed;}
+    .status-badge{padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:800;text-transform:uppercase;white-space:nowrap;}
+    .badge-pending{background:#fef3c7;color:#92400e;}
+    .badge-approved{background:#d1fae5;color:#065f46;}
+    .badge-rejected{background:#fee2e2;color:#991b1b;}
+    .order-msg{background:#fafafa;border-radius:10px;padding:10px 14px;margin:12px 0;font-size:.9rem;color:#555;border-left:3px solid #e0e0e0;}
+    .order-actions{display:flex;gap:10px;margin-top:14px;}
+    .btn-approve,.btn-reject{padding:9px 20px;border-radius:50px;border:none;font-family:"Nunito",sans-serif;font-weight:800;cursor:pointer;font-size:.9rem;transition:all .2s;}
+    .btn-approve{background:linear-gradient(135deg,var(--accent),#04b58a);color:white;box-shadow:0 4px 12px rgba(6,214,160,0.3);}
+    .btn-approve:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(6,214,160,0.45);}
+    .btn-reject{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;box-shadow:0 4px 12px rgba(255,77,109,0.3);}
+    .btn-reject:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,77,109,0.45);}
+    .btn-undo{padding:9px 20px;border-radius:50px;border:2px solid #ccc;background:white;color:#666;font-family:"Nunito",sans-serif;font-weight:700;cursor:pointer;font-size:.9rem;}
+    .btn-undo:hover{border-color:#999;}
+
+    /* Stock manager */
+    .stock-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+    .stock-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;}
+    .stock-img{width:80px;height:80px;border-radius:12px;object-fit:cover;flex-shrink:0;}
+    .stock-details{flex:1;}
+    .stock-details h3{font-family:"Fredoka One",cursive;font-size:1.1rem;margin-bottom:4px;}
+    .stock-details p{color:var(--muted);font-size:.85rem;margin-bottom:12px;}
+    .stock-control{display:flex;align-items:center;gap:10px;}
+    .stock-control input{width:72px;padding:8px;border:2px solid #e0e0e0;border-radius:10px;text-align:center;font-family:"Nunito",sans-serif;font-size:1rem;font-weight:700;outline:none;}
+    .stock-control input:focus{border-color:var(--primary);}
+    .save-stock-btn{padding:8px 18px;border-radius:50px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;border:none;font-family:"Nunito",sans-serif;font-weight:800;cursor:pointer;font-size:.88rem;transition:all .2s;}
+    .save-stock-btn:hover{transform:scale(1.05);}
+    .save-stock-btn.saved{background:linear-gradient(135deg,var(--accent),#04b58a);}
+
+    /* Empty state */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty-state .empty-icon{font-size:4rem;margin-bottom:16px;}
+    .empty-state h3{font-family:"Fredoka One",cursive;font-size:1.5rem;margin-bottom:8px;color:#aaa;}
+
+    /* Toast */
+    .toast{position:fixed;bottom:28px;right:28px;background:#2d2d2d;color:white;padding:12px 22px;border-radius:50px;font-weight:700;font-size:.9rem;z-index:9999;transform:translateY(80px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);opacity:0;}
+    .toast.show{transform:translateY(0);opacity:1;}
+
+    /* Filter bar */
+    .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+    .filter-btn{padding:8px 18px;border-radius:50px;border:2px solid #e0e0e0;background:white;font-family:"Nunito",sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;}
+    .filter-btn.active{background:var(--primary);border-color:var(--primary);color:white;}
+
+    /* Loading */
+    .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative;}
+      .content{margin-left:0;}
+      .dashboard{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <div class="logo">🔐</div>
+    <h1>Admin Login</h1>
+    <p>Uday &amp; Veer Snack Shop<br/>Only authorized admins can sign in.</p>
+    <button class="google-btn" id="signInBtn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      Continue with Google
+    </button>
+    <div class="access-denied" id="accessDenied">⛔ Access denied. Your account is not an authorized admin.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span>🍬</span>
+      <h2>Uday &amp; Veer<br/>Snack Shop</h2>
+      <p id="adminEmail"></p>
+    </div>
+    <nav>
+      <a href="#" class="active" onclick="showTab('pending',this)" id="nav-pending">
+        <span class="nav-icon">⏳</span> Pending
+        <span class="nav-badge" id="pendingBadge">0</span>
+      </a>
+      <a href="#" onclick="showTab('all',this)" id="nav-all">
+        <span class="nav-icon">📋</span> All Orders
+      </a>
+      <a href="#" onclick="showTab('stock',this)" id="nav-stock">
+        <span class="nav-icon">📦</span> Manage Stock
+      </a>
+    </nav>
+    <button class="signout-btn" onclick="signOut()">
+      <span>🚪</span> Sign Out
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="page-header">
+      <h1 id="pageTitle">Pending Orders</h1>
+      <p id="pageSubtitle">Orders waiting for your approval</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card stat-pending"><div class="stat-num" id="statPending">0</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card stat-approved"><div class="stat-num" id="statApproved">0</div><div class="stat-label">Approved</div></div>
+      <div class="stat-card stat-rejected"><div class="stat-num" id="statRejected">0</div><div class="stat-label">Rejected</div></div>
+      <div class="stat-card stat-revenue"><div class="stat-num" id="statRevenue">$0</div><div class="stat-label">Revenue</div></div>
+    </div>
+
+    <!-- Pending Tab -->
+    <div class="tab-panel active" id="tab-pending">
+      <div class="orders-list" id="pendingList"></div>
+    </div>
+
+    <!-- All Orders Tab -->
+    <div class="tab-panel" id="tab-all">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterOrders('all',this)">All</button>
+        <button class="filter-btn" onclick="filterOrders('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="filterOrders('approved',this)">Approved</button>
+        <button class="filter-btn" onclick="filterOrders('rejected',this)">Rejected</button>
+      </div>
+      <div class="orders-list" id="allList"></div>
+    </div>
+
+    <!-- Stock Tab -->
+    <div class="tab-panel" id="tab-stock">
+      <div class="stock-grid" id="stockGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, doc, onSnapshot, updateDoc, setDoc, getDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  // ─── ADMIN WHITELIST ───────────────────────────────────────────────────────
+  // Add Uday's and Veer's Gmail addresses here:
+  const ADMIN_EMAILS = [
+    "uday@gmail.com",     // Replace with Uday's actual Gmail
+    "veer@gmail.com"      // Replace with Veer's actual Gmail
+  ];
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  let allOrders = [];
+  let products = [];
+  let currentFilter = "all";
+
+  // ─── AUTH ─────────────────────────────────────────────────────────────────
+  window.signInWithGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const email = result.user.email;
+      if (!ADMIN_EMAILS.includes(email)) {
+        await fbSignOut(auth);
+        document.getElementById("accessDenied").style.display = "block";
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  window.signOut = async function() {
+    await fbSignOut(auth);
+  };
+
+  onAuthStateChanged(auth, user => {
+    if (user && ADMIN_EMAILS.includes(user.email)) {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("dashboard").style.display = "flex";
+      document.getElementById("adminEmail").textContent = user.email;
+      initDashboard();
+    } else {
+      document.getElementById("loginPage").style.display = "flex";
+      document.getElementById("dashboard").style.display = "none";
+    }
+  });
+
+  // ─── DASHBOARD ────────────────────────────────────────────────────────────
+  function initDashboard() {
+    // Listen to orders
+    onSnapshot(collection(db, "orders"), snap => {
+      allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+      updateStats();
+      renderPending();
+      renderAll();
+    });
+
+    // Listen to products
+    onSnapshot(collection(db, "products"), snap => {
+      products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const order = ["sour_patch","watermelon_sour_patch","snickers"];
+      products.sort((a,b) => order.indexOf(a.id)-order.indexOf(b.id));
+      renderStock();
+    });
+  }
+
+  function updateStats() {
+    const pending = allOrders.filter(o => o.status==="pending").length;
+    const approved = allOrders.filter(o => o.status==="approved").length;
+    const rejected = allOrders.filter(o => o.status==="rejected").length;
+    const revenue = allOrders.filter(o => o.status==="approved").reduce((s,o) => s+(o.total||0), 0);
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statApproved").textContent = approved;
+    document.getElementById("statRejected").textContent = rejected;
+    document.getElementById("statRevenue").textContent = `$${revenue}`;
+    document.getElementById("pendingBadge").textContent = pending;
+  }
+
+  function formatDate(ts) {
+    if (!ts) return "Just now";
+    const d = new Date(ts.seconds*1000);
+    return d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+  }
+
+  function orderCardHTML(o, showActions=true) {
+    const badgeClass = {pending:"badge-pending",approved:"badge-approved",rejected:"badge-rejected"}[o.status]||"badge-pending";
+    const actions = showActions && o.status==="pending" ? `
+      <div class="order-actions">
+        <button class="btn-approve" onclick="handleOrder('${o.id}','approved')">✅ Approve</button>
+        <button class="btn-reject" onclick="handleOrder('${o.id}','rejected')">❌ Reject</button>
+      </div>` :
+      (showActions && o.status!=="pending" ? `
+      <div class="order-actions">
+        <button class="btn-undo" onclick="handleOrder('${o.id}','pending')">↩ Undo</button>
+      </div>` : "");
+    const msg = o.message ? `<div class="order-msg">💬 "${o.message}"</div>` : "";
+    return `
+      <div class="order-card ${o.status}" id="order-${o.id}">
+        <div class="order-top">
+          <div class="order-info">
+            <h3>${o.customerName}</h3>
+            <div class="order-meta">
+              <span class="meta-pill">🍬 ${o.productName}</span>
+              <span class="meta-pill">x${o.quantity} — $${o.total}</span>
+              <span class="meta-pill meetup">📍 ${o.meetupLocation}</span>
+              <span class="meta-pill">🕐 ${formatDate(o.createdAt)}</span>
+            </div>
+          </div>
+          <span class="status-badge ${badgeClass}">${o.status}</span>
+        </div>
+        ${msg}
+        ${actions}
+      </div>`;
+  }
+
+  function renderPending() {
+    const pending = allOrders.filter(o => o.status==="pending");
+    const container = document.getElementById("pendingList");
+    if (pending.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎉</div><h3>All caught up!</h3><p>No pending orders right now.</p></div>`;
+    } else {
+      container.innerHTML = pending.map(o => orderCardHTML(o)).join("");
+    }
+  }
+
+  window.filterOrders = function(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderAll();
+  };
+
+  function renderAll() {
+    const filtered = currentFilter==="all" ? allOrders : allOrders.filter(o => o.status===currentFilter);
+    const container = document.getElementById("allList");
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here once placed.</p></div>`;
+    } else {
+      container.innerHTML = filtered.map(o => orderCardHTML(o)).join("");
+    }
+  }
+
+  window.handleOrder = async function(orderId, newStatus) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), {
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      });
+      showToast(newStatus==="approved" ? "✅ Order approved!" : newStatus==="rejected" ? "❌ Order rejected" : "↩ Order reset to pending");
+    } catch(e) {
+      console.error(e);
+      showToast("Error updating order");
+    }
+  };
+
+  function renderStock() {
+    const grid = document.getElementById("stockGrid");
+    if (products.length===0) { grid.innerHTML = `<p style="color:var(--muted)">Loading products...</p>`; return; }
+    grid.innerHTML = products.map(p => `
+      <div class="stock-card">
+        <img class="stock-img" src="${p.image}" alt="${p.name}" />
+        <div class="stock-details">
+          <h3>${p.emoji} ${p.name}</h3>
+          <p>Current stock: <strong>${p.stock}</strong></p>
+          <div class="stock-control">
+            <input type="number" id="stock-${p.id}" value="${p.stock}" min="0" max="999" />
+            <button class="save-stock-btn" id="savebtn-${p.id}" onclick="saveStock('${p.id}')">Save</button>
+          </div>
+        </div>
+      </div>`).join("");
+  }
+
+  window.saveStock = async function(productId) {
+    const input = document.getElementById(`stock-${productId}`);
+    const newStock = parseInt(input.value);
+    if (isNaN(newStock) || newStock < 0) { showToast("Please enter a valid stock number"); return; }
+    const btn = document.getElementById(`savebtn-${productId}`);
+    btn.textContent = "Saving...";
+    btn.disabled = true;
+    try {
+      await updateDoc(doc(db,"products",productId), { stock: newStock });
+      btn.textContent = "Saved!";
+      btn.classList.add("saved");
+      showToast("📦 Stock updated!");
+      setTimeout(() => { btn.textContent="Save"; btn.classList.remove("saved"); btn.disabled=false; }, 2000);
+    } catch(e) {
+      console.error(e);
+      showToast("Error saving stock");
+      btn.textContent = "Save";
+      btn.disabled = false;
+    }
+  };
+
+  window.showTab = function(tab, el) {
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
+    document.getElementById(`tab-${tab}`).classList.add("active");
+    el.classList.add("active");
+    const titles = {pending:["Pending Orders","Orders waiting for your approval"],all:["All Orders","Complete order history"],stock:["Manage Stock","Update candy inventory"]};
+    document.getElementById("pageTitle").textContent = titles[tab][0];
+    document.getElementById("pageSubtitle").textContent = titles[tab][1];
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 3000);
+  }
+</script>
+</body>
+</html>
