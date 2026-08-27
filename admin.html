@@ -92,6 +92,8 @@
     .save-stock-btn:hover{transform:scale(1.05);}
     .save-stock-btn.saved{background:linear-gradient(135deg,var(--accent),#04b58a);}
 
+    .btn-trash { padding:9px 14px; border-radius:50px; border:2px solid #fee2e2; background:white; color:#dc3545; font-size:1rem; cursor:pointer; transition:all .2s; }
+    .btn-trash:hover { background:#fee2e2; border-color:#dc3545; transform:scale(1.1); }
     /* Empty state */
     .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
     .empty-state .empty-icon{font-size:4rem;margin-bottom:16px;}
@@ -227,7 +229,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, doc, onSnapshot, updateDoc, serverTimestamp }
+  import { getFirestore, collection, doc, onSnapshot, updateDoc, deleteDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -398,8 +400,17 @@
   window.handleOrder = async function(orderId, newStatus) {
     try {
       await updateDoc(doc(db,"orders",orderId), { status: newStatus, updatedAt: serverTimestamp() });
-      showToast(newStatus==="approved" ? "✅ Order approved!" : newStatus==="rejected" ? "❌ Order rejected" : "↩ Order reset");
+      showToast(newStatus==="approved" ? "✅ Order approved!" : "↩ Order reset");
     } catch(e) { showToast("Error updating order"); }
+  };
+
+  window.deleteOrder = async function(orderId) {
+    try {
+      const card = document.getElementById(`order-${orderId}`);
+      if (card) { card.style.opacity = "0"; card.style.transform = "scale(0.95)"; card.style.transition = "all .25s"; }
+      await deleteDoc(doc(db,"orders",orderId));
+      showToast("🗑️ Order deleted");
+    } catch(e) { showToast("Error deleting order"); }
   };
 
   function renderStock() {
@@ -455,6 +466,7 @@
 </script>
 </body>
 </html>
+
 
 
 
