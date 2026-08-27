@@ -106,6 +106,19 @@
     .filter-btn{padding:8px 18px;border-radius:50px;border:2px solid #e0e0e0;background:white;font-family:"Nunito",sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;}
     .filter-btn.active{background:var(--primary);border-color:var(--primary);color:white;}
 
+    /* Passcode numpad */
+    .passcode-dots { display:flex; justify-content:center; gap:16px; margin:24px 0 28px; }
+    .passcode-dots span { width:18px; height:18px; border-radius:50%; border:2px solid #ddd; background:white; transition:all .2s; display:block; }
+    .passcode-dots span.filled { background:var(--primary); border-color:var(--primary); transform:scale(1.1); }
+    .passcode-dots span.shake { animation:shake .4s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+    .numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:260px; margin:0 auto; }
+    .num-btn { padding:18px; border-radius:16px; border:2px solid #eee; background:white; font-family:"Fredoka One",cursive; font-size:1.4rem; cursor:pointer; transition:all .15s; color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+    .num-btn:hover { border-color:var(--primary); color:var(--primary); transform:scale(1.05); }
+    .num-btn:active { transform:scale(0.95); }
+    .clear-btn { color:var(--muted); font-size:1.2rem; }
+    .submit-num-btn { background:linear-gradient(135deg,var(--accent),#04b58a); color:white; border-color:transparent; font-size:1.3rem; }
+    .submit-num-btn:hover { color:white; border-color:transparent; }
     /* Loading */
     .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -124,12 +137,25 @@
   <div class="login-card">
     <div class="logo">🔐</div>
     <h1>Admin Login</h1>
-    <p>Uday &amp; Veer Snack Shop<br/>Only authorized admins can sign in.</p>
-    <button class="google-btn" id="signInBtn" onclick="signInWithGoogle()">
-      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
-      Continue with Google
-    </button>
-    <div class="access-denied" id="accessDenied">⛔ Access denied. Your account is not an authorized admin.</div>
+    <p>Uday &amp; Veer Snack Shop<br/>Enter the passcode to continue.</p>
+    <div class="passcode-dots" id="passcodeDots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="numpad">
+      <button class="num-btn" onclick="enterDigit(1)">1</button>
+      <button class="num-btn" onclick="enterDigit(2)">2</button>
+      <button class="num-btn" onclick="enterDigit(3)">3</button>
+      <button class="num-btn" onclick="enterDigit(4)">4</button>
+      <button class="num-btn" onclick="enterDigit(5)">5</button>
+      <button class="num-btn" onclick="enterDigit(6)">6</button>
+      <button class="num-btn" onclick="enterDigit(7)">7</button>
+      <button class="num-btn" onclick="enterDigit(8)">8</button>
+      <button class="num-btn" onclick="enterDigit(9)">9</button>
+      <button class="num-btn clear-btn" onclick="clearCode()">⌫</button>
+      <button class="num-btn" onclick="enterDigit(0)">0</button>
+      <button class="num-btn submit-num-btn" onclick="submitCode()">✓</button>
+    </div>
+    <div class="access-denied" id="accessDenied">⛔ Wrong passcode. Try again.</div>
   </div>
 </div>
 
@@ -201,12 +227,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as fbSignOut }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, collection, doc, onSnapshot, updateDoc, setDoc, getDoc, serverTimestamp }
+  import { getFirestore, collection, doc, onSnapshot, updateDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
   const firebaseConfig = {
     apiKey: "AIzaSyAsbnd7Ubbc_KH3Ilvnw9PtPEdaNMsu9cE",
     authDomain: "uday-and-veer-snack-shop.firebaseapp.com",
@@ -216,56 +239,71 @@
     appId: "1:1005144962617:web:1f4c9847c47cad62127fe8",
     measurementId: "G-7KLFDDF7RF"
   };
-  // ─── ADMIN WHITELIST ───────────────────────────────────────────────────────
-  // Add Uday's and Veer's Gmail addresses here:
-  const ADMIN_EMAILS = [
-    "8035743@students.d303.org",   // Uday
-    "8035227@students.d303.org",   // Veer
-    "meqdad@gmail.com",            // Admin
-    "8039494@students.d303.org"    // Admin
-  ];
-  // ──────────────────────────────────────────────────────────────────────────
+
+  const PASSCODE = "9326";
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
 
   let allOrders = [];
   let products = [];
   let currentFilter = "all";
+  let enteredCode = "";
 
-  // ─── AUTH ─────────────────────────────────────────────────────────────────
-  window.signInWithGoogle = async function() {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const email = result.user.email;
-      if (!ADMIN_EMAILS.includes(email)) {
-        await fbSignOut(auth);
-        document.getElementById("accessDenied").style.display = "block";
-      }
-    } catch(e) { console.error(e); }
-  };
+  // ─── PASSCODE AUTH ────────────────────────────────────────────────────────
+  // Check if already logged in this session
+  if (sessionStorage.getItem("adminAuth") === "true") {
+    showDashboard();
+  }
 
-  window.signOut = async function() {
-    await fbSignOut(auth);
-  };
-
-  onAuthStateChanged(auth, user => {
-    if (user && ADMIN_EMAILS.includes(user.email)) {
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("dashboard").style.display = "flex";
-      document.getElementById("adminEmail").textContent = user.email;
-      initDashboard();
-    } else {
-      document.getElementById("loginPage").style.display = "flex";
-      document.getElementById("dashboard").style.display = "none";
+  window.enterDigit = function(d) {
+    if (enteredCode.length >= 4) return;
+    enteredCode += d;
+    updateDots();
+    if (enteredCode.length === 4) {
+      setTimeout(() => submitCode(), 150);
     }
-  });
+  };
+
+  window.clearCode = function() {
+    enteredCode = enteredCode.slice(0, -1);
+    updateDots();
+    document.getElementById("accessDenied").style.display = "none";
+  };
+
+  window.submitCode = function() {
+    if (enteredCode === PASSCODE) {
+      sessionStorage.setItem("adminAuth", "true");
+      showDashboard();
+    } else {
+      // Wrong code — shake dots and clear
+      const dots = document.querySelectorAll(".passcode-dots span");
+      dots.forEach(d => { d.classList.add("shake"); setTimeout(() => d.classList.remove("shake"), 400); });
+      document.getElementById("accessDenied").style.display = "block";
+      setTimeout(() => { enteredCode = ""; updateDots(); }, 600);
+    }
+  };
+
+  function updateDots() {
+    const dots = document.querySelectorAll(".passcode-dots span");
+    dots.forEach((dot, i) => {
+      dot.classList.toggle("filled", i < enteredCode.length);
+    });
+  }
+
+  function showDashboard() {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
+    initDashboard();
+  }
+
+  window.signOut = function() {
+    sessionStorage.removeItem("adminAuth");
+    location.reload();
+  };
 
   // ─── DASHBOARD ────────────────────────────────────────────────────────────
   function initDashboard() {
-    // Listen to orders
     onSnapshot(collection(db, "orders"), snap => {
       allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
@@ -274,7 +312,6 @@
       renderAll();
     });
 
-    // Listen to products
     onSnapshot(collection(db, "products"), snap => {
       products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       const order = ["sour_patch","watermelon_sour_patch","snickers"];
@@ -291,7 +328,7 @@
     document.getElementById("statPending").textContent = pending;
     document.getElementById("statApproved").textContent = approved;
     document.getElementById("statRejected").textContent = rejected;
-    document.getElementById("statRevenue").textContent = `$${revenue}`;
+    document.getElementById("statRevenue").textContent = `${revenue}`;
     document.getElementById("pendingBadge").textContent = pending;
   }
 
@@ -301,17 +338,16 @@
     return d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
   }
 
-  function orderCardHTML(o, showActions=true) {
+  function orderCardHTML(o) {
     const badgeClass = {pending:"badge-pending",approved:"badge-approved",rejected:"badge-rejected"}[o.status]||"badge-pending";
-    const actions = showActions && o.status==="pending" ? `
+    const actions = o.status==="pending" ? `
       <div class="order-actions">
         <button class="btn-approve" onclick="handleOrder('${o.id}','approved')">✅ Approve</button>
         <button class="btn-reject" onclick="handleOrder('${o.id}','rejected')">❌ Reject</button>
-      </div>` :
-      (showActions && o.status!=="pending" ? `
+      </div>` : `
       <div class="order-actions">
         <button class="btn-undo" onclick="handleOrder('${o.id}','pending')">↩ Undo</button>
-      </div>` : "");
+      </div>`;
     const msg = o.message ? `<div class="order-msg">💬 "${o.message}"</div>` : "";
     return `
       <div class="order-card ${o.status}" id="order-${o.id}">
@@ -320,7 +356,7 @@
             <h3>${o.customerName}</h3>
             <div class="order-meta">
               <span class="meta-pill">🍬 ${o.productName}</span>
-              <span class="meta-pill">x${o.quantity} — $${o.total}</span>
+              <span class="meta-pill">x${o.quantity} — ${o.total}</span>
               <span class="meta-pill meetup">📍 ${o.meetupLocation}</span>
               <span class="meta-pill">🕐 ${formatDate(o.createdAt)}</span>
             </div>
@@ -361,20 +397,14 @@
 
   window.handleOrder = async function(orderId, newStatus) {
     try {
-      await updateDoc(doc(db,"orders",orderId), {
-        status: newStatus,
-        updatedAt: serverTimestamp()
-      });
-      showToast(newStatus==="approved" ? "✅ Order approved!" : newStatus==="rejected" ? "❌ Order rejected" : "↩ Order reset to pending");
-    } catch(e) {
-      console.error(e);
-      showToast("Error updating order");
-    }
+      await updateDoc(doc(db,"orders",orderId), { status: newStatus, updatedAt: serverTimestamp() });
+      showToast(newStatus==="approved" ? "✅ Order approved!" : newStatus==="rejected" ? "❌ Order rejected" : "↩ Order reset");
+    } catch(e) { showToast("Error updating order"); }
   };
 
   function renderStock() {
     const grid = document.getElementById("stockGrid");
-    if (products.length===0) { grid.innerHTML = `<p style="color:var(--muted)">Loading products...</p>`; return; }
+    if (!products.length) { grid.innerHTML = `<p style="color:var(--muted)">Loading...</p>`; return; }
     grid.innerHTML = products.map(p => `
       <div class="stock-card">
         <img class="stock-img" src="${p.image}" alt="${p.name}" />
@@ -392,21 +422,17 @@
   window.saveStock = async function(productId) {
     const input = document.getElementById(`stock-${productId}`);
     const newStock = parseInt(input.value);
-    if (isNaN(newStock) || newStock < 0) { showToast("Please enter a valid stock number"); return; }
+    if (isNaN(newStock) || newStock < 0) { showToast("Please enter a valid number"); return; }
     const btn = document.getElementById(`savebtn-${productId}`);
-    btn.textContent = "Saving...";
-    btn.disabled = true;
+    btn.textContent = "Saving..."; btn.disabled = true;
     try {
       await updateDoc(doc(db,"products",productId), { stock: newStock });
-      btn.textContent = "Saved!";
-      btn.classList.add("saved");
+      btn.textContent = "Saved!"; btn.classList.add("saved");
       showToast("📦 Stock updated!");
       setTimeout(() => { btn.textContent="Save"; btn.classList.remove("saved"); btn.disabled=false; }, 2000);
     } catch(e) {
-      console.error(e);
       showToast("Error saving stock");
-      btn.textContent = "Save";
-      btn.disabled = false;
+      btn.textContent = "Save"; btn.disabled = false;
     }
   };
 
@@ -429,6 +455,9 @@
 </script>
 </body>
 </html>
+
+
+
 
 
 
